@@ -1,26 +1,87 @@
 @import "tailwindcss";
 
+/*
+ * HomeFix Connect brand palette.
+ *
+ * Navy + Blue + Orange, chosen to communicate trust, reliability and action.
+ * Declared as `@theme` tokens so every component references a semantic name
+ * (`bg-brand`, `text-ink`, `border-line`) rather than a raw hex, and a palette
+ * change lands in one place.
+ *
+ *   navy    #0F2A43  navbar, headings, footer
+ *   brand   #1976D2  primary buttons, links, active states
+ *   accent  #F59E0B  call-to-action buttons, highlights
+ *   surface #F5F7FA  page background
+ *   ink     #1F2937  body text
+ */
+@theme {
+  --color-navy: #0f2a43;
+  --color-navy-700: #16395a;
+  --color-brand: #1976d2;
+  --color-brand-600: #1565c0;
+  --color-brand-50: #e8f1fb;
+  --color-accent: #f59e0b;
+  --color-accent-600: #d97706;
+  --color-accent-50: #fef4e2;
+  --color-ink: #1f2937;
+  --color-ink-muted: #5b6675;
+  --color-success: #15803d;
+  --color-success-50: #e7f5ec;
+  --color-danger: #b91c1c;
+  --color-danger-50: #fdeaea;
+}
+
+/*
+ * The theme-dependent half of the palette.
+ *
+ * These are the values that differ between light and dark, so they are plain
+ * custom properties first and only become Tailwind tokens through the `inline`
+ * block below. `inline` is what makes `bg-surface` resolve to `var(--surface)`
+ * at use-time rather than baking in the light-mode value, which is what lets
+ * the dark-mode overrides take effect.
+ */
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: var(--color-ink);
+  --muted-foreground: var(--color-ink-muted);
+  --card: #ffffff;
+  --surface: #f5f7fa;
+  --line: #e2e8f0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0b1620;
+    --foreground: #e8edf2;
+    --muted-foreground: #9aa7b4;
+    --card: #12212e;
+    --surface: #0e1a25;
+    --line: #23384a;
+  }
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-card: var(--card);
+  --color-surface: var(--surface);
+  --color-line: var(--line);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/*
+ * Focus rings are brand-blue rather than the browser default, so keyboard
+ * focus stays visible against both white cards and the navy header.
+ */
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
 }
