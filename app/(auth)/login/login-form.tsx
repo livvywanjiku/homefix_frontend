@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import { SubmitButton } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
+import { PasswordInput } from "@/components/ui/password-input";
 import { loginAction } from "../actions";
 import { INITIAL_FORM_STATE } from "../form-state";
 
@@ -34,9 +35,7 @@ export function LoginForm({ next }: { next?: string }) {
       </Field>
 
       <Field name="password" label="Password" errors={state.errors?.password}>
-        {(props) => (
-          <Input {...props} type="password" autoComplete="current-password" required />
-        )}
+        {(props) => <PasswordInput {...props} autoComplete="current-password" required />}
       </Field>
 
       <SubmitButton pendingLabel="Signing in…">Sign in</SubmitButton>

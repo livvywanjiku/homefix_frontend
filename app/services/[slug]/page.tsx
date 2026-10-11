@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { ServiceIcon } from "@/components/service-icon";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -53,7 +54,7 @@ export default async function ServiceCategoryPage({ params }: Props) {
       <header className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="max-w-2xl">
           <h1 className="flex items-center gap-3 text-3xl font-semibold tracking-tight">
-            <span aria-hidden="true">{category.icon ?? "🛠️"}</span>
+            <ServiceIcon slug={category.slug} size={32} className="shrink-0 text-brand" />
             {category.name}
           </h1>
 
@@ -64,7 +65,7 @@ export default async function ServiceCategoryPage({ params }: Props) {
         </div>
 
         <Link
-          href={`/professionals?category=${category.slug}`}
+          href={`/professionals?service_category_id=${category.id}`}
           className="inline-flex h-11 shrink-0 items-center justify-center rounded-lg bg-accent px-5 text-sm font-medium text-navy transition-colors hover:bg-accent-600"
         >
           Find a {category.name} pro
@@ -102,12 +103,13 @@ export default async function ServiceCategoryPage({ params }: Props) {
                   ) : null}
 
                   {/*
-                    Links into the request wizard with the service preselected.
-                    The wizard lands in Phase 4; until then this points at the
-                    professional search for the category, which does resolve.
+                    The intended action, straight into the request wizard with
+                    this service preselected. A guest is redirected to sign in by
+                    `proxy.ts` and returned here afterwards with the whole target
+                    — query string included — so the choice survives the round trip.
                   */}
                   <Link
-                    href={`/professionals?category=${category.slug}&service=${service.slug}`}
+                    href={`/dashboard/requests/new?service=${service.id}`}
                     className="mt-auto pt-2 text-sm font-medium text-brand hover:underline"
                   >
                     Request this service

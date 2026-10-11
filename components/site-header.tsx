@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ROLE_HOME } from "@/lib/roles";
+import { ROLE_HOME, type Role } from "@/lib/roles";
 import { verifySession } from "@/lib/dal";
 import { logoutAction } from "@/lib/actions/session";
 
@@ -8,11 +8,14 @@ const NAV_LINKS = [
   { href: "/professionals", label: "Find a professional" },
 ];
 
-const ROLE_LABEL = {
+const ROLE_LABEL: Record<Role, string> = {
   admin: "Admin console",
+  // The two administrative roles share one console, so the link says the same
+  // thing for both.
+  superadmin: "Admin console",
   customer: "My dashboard",
   professional: "Pro dashboard",
-} as const;
+};
 
 /**
  * The site header, on the brand's navy.

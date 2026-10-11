@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import { SubmitButton } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
+import { PasswordInput } from "@/components/ui/password-input";
 import { resetPasswordAction } from "../../actions";
 import { INITIAL_FORM_STATE } from "../../form-state";
 
@@ -44,7 +45,7 @@ export function ResetPasswordForm({ token, email }: { token: string; email?: str
         errors={state.errors?.password}
       >
         {(props) => (
-          <Input {...props} type="password" autoComplete="new-password" required />
+          <PasswordInput {...props} autoComplete="new-password" required />
         )}
       </Field>
 
@@ -54,7 +55,7 @@ export function ResetPasswordForm({ token, email }: { token: string; email?: str
         errors={state.errors?.password_confirmation}
       >
         {(props) => (
-          <Input {...props} type="password" autoComplete="new-password" required />
+          <PasswordInput {...props} autoComplete="new-password" required />
         )}
       </Field>
 

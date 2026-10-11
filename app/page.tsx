@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/field";
-import { getLocations } from "@/lib/catalogue";
+import { getLocations, getServiceCategories } from "@/lib/catalogue";
 
 export const metadata: Metadata = {
   title: "Find trusted home professionals",
@@ -35,20 +35,21 @@ const STEPS = [
   },
 ];
 
-const POPULAR = [
-  "Plumbing",
-  "Electrical",
-  "Cleaning",
-  "Carpentry",
-  "Painting",
-  "Appliance Repair",
-];
+const POPULAR_LIMIT = 6;
 
 export default async function Home() {
-  // The location picker is the one part of the hero that is real data. It is a
-  // small, public, cacheable list, and fetching it server-side keeps the search
-  // form working with JavaScript disabled.
-  const locations = await getLocations();
+  // The hero's two real pieces of data: the location picker and the popular
+  // categories. Both are small, public and cacheable, and fetching them
+  // server-side keeps the search form working with JavaScript disabled.
+  //
+  // The categories are read from the catalogue rather than hardcoded, so a
+  // category added in the admin console shows up here without a release.
+  const [locations, categories] = await Promise.all([
+    getLocations(),
+    getServiceCategories(),
+  ]);
+
+  const popular = categories.slice(0, POPULAR_LIMIT);
 
   return (
     <div className="flex flex-1 flex-col">
@@ -86,12 +87,12 @@ export default async function Home() {
             </div>
 
             <div className="sm:w-56">
-              <label htmlFor="location" className="sr-only">
+              <label htmlFor="location_id" className="sr-only">
                 Your location
               </label>
               <Select
-                id="location"
-                name="location"
+                id="location_id"
+                name="location_id"
                 defaultValue=""
                 className="border-transparent bg-surface"
               >
@@ -109,20 +110,22 @@ export default async function Home() {
             </Button>
           </form>
 
-          <p className="mt-5 text-sm text-white/60">
-            Popular:{" "}
-            {POPULAR.map((service, index) => (
-              <span key={service}>
-                {index > 0 ? " · " : ""}
-                <Link
-                  href={`/professionals?q=${encodeURIComponent(service)}`}
-                  className="underline-offset-4 transition-colors hover:text-white hover:underline"
-                >
-                  {service}
-                </Link>
-              </span>
-            ))}
-          </p>
+          {popular.length > 0 ? (
+            <p className="mt-5 text-sm text-white/60">
+              Popular:{" "}
+              {popular.map((category, index) => (
+                <span key={category.id}>
+                  {index > 0 ? " · " : ""}
+                  <Link
+                    href={`/services/${category.slug}`}
+                    className="underline-offset-4 transition-colors hover:text-white hover:underline"
+                  >
+                    {category.name}
+                  </Link>
+                </span>
+              ))}
+            </p>
+          ) : null}
         </div>
       </section>
 

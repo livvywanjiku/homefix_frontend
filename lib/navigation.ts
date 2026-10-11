@@ -1,4 +1,4 @@
-import { ROLE_HOME, requiredRoleFor, type Role } from "./roles";
+import { ROLE_HOME, requiredRolesFor, type Role } from "./roles";
 
 /*
  * Backslash and C0 control characters, which have no business in a path.
@@ -28,7 +28,7 @@ export function safeNextPath(value: string | null | undefined, role: Role): stri
 
   // Compare the path only; a query string or fragment is not part of the route.
   const pathname = value.split(/[?#]/)[0];
-  const required = requiredRoleFor(pathname);
+  const required = requiredRolesFor(pathname);
 
-  return required === null || required === role ? value : fallback;
+  return required.length === 0 || required.includes(role) ? value : fallback;
 }

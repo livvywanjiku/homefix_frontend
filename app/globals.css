@@ -32,6 +32,41 @@
 }
 
 /*
+ * The administration console's palette.
+ *
+ * A separate, deliberately flatter token set from the public brand palette,
+ * applied only inside `/admin`. The console is a working tool, so it trades the
+ * public site's navy-and-orange warmth for neutral surfaces and a single teal
+ * accent, which keeps attention on figures and statuses rather than decoration.
+ *
+ *   primary   #0F172A  sidebar, headings
+ *   secondary #1E3A5F  sidebar hover/active, secondary chrome
+ *   accent    #0F766E  primary actions, active markers (used sparingly)
+ *   bg        #F8FAFC  page background
+ *   card      #FFFFFF  panels and tables
+ *   text      #0F172A  body text
+ *   muted     #64748B  labels, secondary text
+ *   border    #E2E8F0  hairlines
+ *
+ * These are declared as plain `@theme` tokens rather than `@theme inline`, so
+ * they are fixed values: the brief specifies exact corporate hexes, and a
+ * console that inverted its own colours under a dark-mode OS preference would
+ * no longer be that palette.
+ */
+@theme {
+  --color-admin-primary: #0f172a;
+  --color-admin-secondary: #1e3a5f;
+  --color-admin-accent: #0f766e;
+  --color-admin-accent-soft: #e3efed;
+  --color-admin-bg: #f8fafc;
+  --color-admin-card: #ffffff;
+  --color-admin-text: #0f172a;
+  --color-admin-muted: #64748b;
+  --color-admin-border: #e2e8f0;
+  --color-admin-surface: #f1f5f9;
+}
+
+/*
  * The theme-dependent half of the palette.
  *
  * These are the values that differ between light and dark, so they are plain
@@ -69,6 +104,41 @@
   --color-line: var(--line);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+}
+
+/*
+ * The administration console's surfaces.
+ *
+ * The console reuses the same UI primitives as the rest of the site — the same
+ * `TableCard`, `Card` and `Badge` — so rather than teaching every one of them a
+ * second palette, this class re-points the theme-dependent variables at the
+ * admin tokens for the subtree it wraps. Everything inside inherits them.
+ *
+ * It also pins the console to light: `--background` and friends are the
+ * variables the dark-mode block above overrides, and this declaration follows
+ * it in source order at equal specificity, so an administrator working on a
+ * machine set to dark mode still gets the corporate palette rather than an
+ * inverted approximation of it.
+ *
+ * The brand scale is re-pointed too, because a handful of reused primitives
+ * paint with it — a paginator's active page, a default button, a focused input.
+ * Left alone they would put the public site's bright blue inside a console whose
+ * palette it does not belong to. Each of the three maps onto a token that is
+ * already in the admin set; no new colour is invented. The semantic colours
+ * (success, danger, and the amber accent used for warnings) are deliberately not
+ * touched: they carry meaning rather than brand, and the admin palette does not
+ * define replacements for them.
+ */
+.admin-surface {
+  --background: var(--color-admin-bg);
+  --foreground: var(--color-admin-text);
+  --muted-foreground: var(--color-admin-muted);
+  --card: var(--color-admin-card);
+  --surface: var(--color-admin-surface);
+  --line: var(--color-admin-border);
+  --color-brand: var(--color-admin-secondary);
+  --color-brand-600: var(--color-admin-primary);
+  --color-brand-50: var(--color-admin-surface);
 }
 
 body {

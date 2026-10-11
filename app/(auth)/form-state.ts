@@ -1,15 +1,8 @@
 /**
  * The shape a Server Action returns to `useActionState`.
  *
- * Kept out of `actions.ts` deliberately: a `"use server"` module may only
- * export async functions, so a type or a constant exported from there is a
- * build error rather than a style choice.
+ * The definition moved to `lib/form-state.ts` when the professional workspace
+ * gained its own Server Actions, so that one state type serves every form in
+ * the app. It is re-exported here because the auth forms import it by this path.
  */
-export type FormState = {
-  status: "idle" | "error" | "success";
-  message?: string;
-  /** Laravel's 422 bag, keyed by field name. */
-  errors?: Record<string, string[]>;
-};
-
-export const INITIAL_FORM_STATE: FormState = { status: "idle" };
+export { INITIAL_FORM_STATE, type FormState } from "@/lib/form-state";

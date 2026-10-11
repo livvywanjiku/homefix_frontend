@@ -1,25 +1,16 @@
 import type { Metadata } from "next";
-import { apiFetch } from "@/lib/api";
-import { requireRole } from "@/lib/dal";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "Admin" };
+export const metadata: Metadata = { title: "Administration" };
 
-type MeResponse = { data: { name: string; email: string } };
-
-export default async function AdminDashboardPage() {
-  const session = await requireRole("admin");
-  const { data: user } = await apiFetch<MeResponse>("/auth/me", { token: session.token });
-
-  return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
-      <h1 className="text-2xl font-semibold tracking-tight">Admin console</h1>
-      <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-        Signed in as {user.name} ({user.email}).
-      </p>
-
-      <p className="mt-8 rounded-lg border border-dashed border-black/12 px-4 py-6 text-sm text-zinc-500 dark:border-white/16 dark:text-zinc-400">
-        Verification queue, complaints and platform analytics will appear here.
-      </p>
-    </div>
-  );
+/**
+ * `/admin` is not a screen of its own.
+ *
+ * It redirects rather than rendering a second overview, so there is exactly one
+ * dashboard and no way for two of them to drift apart. The layout above this
+ * page has already established that the visitor is an administrator, so this is
+ * a routing convenience rather than a gate.
+ */
+export default function AdminIndexPage() {
+  redirect("/admin/dashboard");
 }
