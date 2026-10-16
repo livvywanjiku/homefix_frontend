@@ -284,7 +284,7 @@ export function PortfolioManager({
               <Field name="service_id" label="Service" errors={state.errors?.service_id}>
                 {(props) => (
                   <Select {...props} key={fieldKey} defaultValue={editing?.service?.id ?? ""}>
-                    <option value="">Not specified</option>
+                    <option key="not-specified" value="">Not specified</option>
                     {services.map((service) => (
                       <option key={service.id} value={service.id}>
                         {service.name}
@@ -297,7 +297,7 @@ export function PortfolioManager({
               <Field name="location_id" label="Town" errors={state.errors?.location_id}>
                 {(props) => (
                   <Select {...props} key={fieldKey} defaultValue={editing?.location?.id ?? ""}>
-                    <option value="">Not specified</option>
+                    <option key="not-specified" value="">Not specified</option>
                     {locations.map((location) => (
                       <option key={location.id} value={location.id}>
                         {location.label}

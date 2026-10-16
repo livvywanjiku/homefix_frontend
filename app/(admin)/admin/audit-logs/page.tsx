@@ -87,7 +87,7 @@ export default async function AdminAuditLogsPage(props: PageProps<"/admin/audit-
 
         <FilterField label="Action">
           <AdminSelect name="action" defaultValue={one(params.action) ?? ""}>
-            <option value="">Any action</option>
+            <option key="any-action" value="">Any action</option>
             {AUDIT_ACTION_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -98,7 +98,7 @@ export default async function AdminAuditLogsPage(props: PageProps<"/admin/audit-
 
         <FilterField label="Administrator">
           <AdminSelect name="user_id" defaultValue={one(params.user_id) ?? ""}>
-            <option value="">Anyone</option>
+            <option key="anyone" value="">Anyone</option>
             {actors.actors.map((actor) => (
               <option key={actor.id} value={String(actor.id)}>
                 {actor.name}

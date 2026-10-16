@@ -120,7 +120,7 @@ export function ProfessionalFilters({
           onChange={(event) => setCategoryId(event.target.value)}
           className="h-10 rounded-lg border border-line bg-card px-3 text-sm"
         >
-          <option value="">All categories</option>
+          <option key="all-categories" value="">All categories</option>
           {categories.map((category) => (
             <option key={category.id} value={category.id}>
               {category.name}
@@ -139,7 +139,7 @@ export function ProfessionalFilters({
           defaultValue={current.service_id ?? ""}
           className="h-10 rounded-lg border border-line bg-card px-3 text-sm"
         >
-          <option value="">Any service</option>
+          <option key="any-service" value="">Any service</option>
           {visibleServices.map((service) => (
             <option key={service.id} value={service.id}>
               {service.name}
@@ -159,7 +159,7 @@ export function ProfessionalFilters({
           onChange={(event) => setLocationId(event.target.value)}
           className="h-10 rounded-lg border border-line bg-card px-3 text-sm"
         >
-          <option value="">Anywhere in Kenya</option>
+          <option key="anywhere-in-kenya" value="">Anywhere in Kenya</option>
           {locations.map((location) => (
             <option key={location.id} value={location.id}>
               {location.label}
@@ -180,7 +180,7 @@ export function ProfessionalFilters({
           disabled={locationId === ""}
           className="h-10 rounded-lg border border-line bg-card px-3 text-sm disabled:opacity-50"
         >
-          <option value="">Any distance</option>
+          <option key="any-distance" value="">Any distance</option>
           {DISTANCES.map((km) => (
             <option key={km} value={km}>
               {km} km
@@ -199,7 +199,7 @@ export function ProfessionalFilters({
           defaultValue={current.min_rating ?? ""}
           className="h-10 rounded-lg border border-line bg-card px-3 text-sm"
         >
-          <option value="">Any rating</option>
+          <option key="any-rating" value="">Any rating</option>
           {RATINGS.map((rating) => (
             <option key={rating} value={rating}>
               {rating} and above

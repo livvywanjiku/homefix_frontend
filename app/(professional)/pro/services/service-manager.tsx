@@ -198,7 +198,7 @@ export function ServiceManager({
               <Field name="service_id" label="Service" errors={state.errors?.service_id}>
                 {(props) => (
                   <Select {...props} defaultValue="">
-                    <option value="">Choose a service…</option>
+                    <option key="choose-a-service" value="">Choose a service…</option>
                     {selectableServices.map((service) => (
                       <option key={service.id} value={service.id}>
                         {service.category ? `${service.category.name} · ` : ""}
@@ -237,9 +237,9 @@ export function ServiceManager({
                       setPricingType(event.target.value as Offering["pricing_type"])
                     }
                   >
-                    <option value="fixed">Fixed price</option>
-                    <option value="hourly">Hourly rate</option>
-                    <option value="quote">Quote on inspection</option>
+                    <option key="fixed" value="fixed">Fixed price</option>
+                    <option key="hourly" value="hourly">Hourly rate</option>
+                    <option key="quote" value="quote">Quote on inspection</option>
                   </Select>
                 )}
               </Field>

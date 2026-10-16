@@ -184,7 +184,7 @@ export default async function AdminReportsPage(props: PageProps<"/admin/reports"
                       {RANGE_LABELS[preset] ?? preset}
                     </option>
                   ))}
-                <option value="custom">Custom</option>
+                <option key="custom" value="custom">Custom</option>
               </AdminSelect>
             </label>
 
@@ -212,7 +212,7 @@ export default async function AdminReportsPage(props: PageProps<"/admin/reports"
               <label className="flex flex-col gap-1 text-xs font-medium text-admin-muted">
                 Status
                 <AdminSelect name="status" defaultValue={one(params.status) ?? ""}>
-                  <option value="">Any status</option>
+                  <option key="any-status" value="">Any status</option>
                   {(STATUS_OPTIONS[selected.key] ?? []).map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
@@ -226,7 +226,7 @@ export default async function AdminReportsPage(props: PageProps<"/admin/reports"
               <label className="flex flex-col gap-1 text-xs font-medium text-admin-muted">
                 Role
                 <AdminSelect name="role" defaultValue={one(params.role) ?? ""}>
-                  <option value="">Any role</option>
+                  <option key="any-role" value="">Any role</option>
                   {ROLE_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
@@ -240,7 +240,7 @@ export default async function AdminReportsPage(props: PageProps<"/admin/reports"
               <label className="flex flex-col gap-1 text-xs font-medium text-admin-muted">
                 Service
                 <AdminSelect name="service_id" defaultValue={one(params.service_id) ?? ""}>
-                  <option value="">Any service</option>
+                  <option key="any-service" value="">Any service</option>
                   {services.data.map((service) => (
                     <option key={service.id} value={String(service.id)}>
                       {service.name}
@@ -254,7 +254,7 @@ export default async function AdminReportsPage(props: PageProps<"/admin/reports"
               <label className="flex flex-col gap-1 text-xs font-medium text-admin-muted">
                 Location
                 <AdminSelect name="location_id" defaultValue={one(params.location_id) ?? ""}>
-                  <option value="">Any location</option>
+                  <option key="any-location" value="">Any location</option>
                   {locations.data.map((location) => (
                     <option key={location.id} value={String(location.id)}>
                       {location.name}

@@ -45,7 +45,7 @@ export function ServiceForm({
 
         <FormField label="Category" error={state.errors?.service_category_id}>
           <AdminSelect name="service_category_id" defaultValue={String(selected)} required>
-            <option value="" disabled>
+            <option key="choose-a-category" value="" disabled>
               Choose a category
             </option>
             {categories.map((category) => (

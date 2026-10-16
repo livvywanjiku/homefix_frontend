@@ -96,7 +96,7 @@ export default async function Home() {
                 defaultValue=""
                 className="border-transparent bg-surface"
               >
-                <option value="">📍 Any location</option>
+                <option key="any-location" value="">📍 Any location</option>
                 {locations.map((location) => (
                   <option key={location.id} value={location.id}>
                     📍 {location.label}

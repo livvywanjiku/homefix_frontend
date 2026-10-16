@@ -95,7 +95,7 @@ export default async function AdminProfessionalsPage(props: PageProps<"/admin/pr
 
         <FilterField label="Verification">
           <AdminSelect name="verification_status" defaultValue={one(params.verification_status) ?? ""}>
-            <option value="">Any status</option>
+            <option key="any-status" value="">Any status</option>
             {VERIFICATION_STATUS_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -106,7 +106,7 @@ export default async function AdminProfessionalsPage(props: PageProps<"/admin/pr
 
         <FilterField label="Base location">
           <AdminSelect name="location_id" defaultValue={one(params.location_id) ?? ""}>
-            <option value="">Any location</option>
+            <option key="any-location" value="">Any location</option>
             {locations.data.map((location) => (
               <option key={location.id} value={String(location.id)}>
                 {location.label}

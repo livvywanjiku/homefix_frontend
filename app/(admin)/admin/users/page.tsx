@@ -78,7 +78,7 @@ export default async function AdminUsersPage(props: PageProps<"/admin/users">) {
 
         <FilterField label="Role">
           <AdminSelect name="role" defaultValue={one(params.role) ?? ""}>
-            <option value="">Any role</option>
+            <option key="any-role" value="">Any role</option>
             {ROLE_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -89,7 +89,7 @@ export default async function AdminUsersPage(props: PageProps<"/admin/users">) {
 
         <FilterField label="Status">
           <AdminSelect name="status" defaultValue={one(params.status) ?? ""}>
-            <option value="">Any status</option>
+            <option key="any-status" value="">Any status</option>
             {ACCOUNT_STATUS_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}

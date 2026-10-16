@@ -67,7 +67,7 @@ export function TransitionBookingForm({
           defaultValue=""
           className="rounded-md border border-admin-border bg-admin-card px-2.5 py-2 text-sm text-admin-text focus:border-admin-accent focus:outline-none"
         >
-          <option value="" disabled>
+          <option key="choose-a-state" value="" disabled>
             Choose a state
           </option>
           {allowed.map((option) => (

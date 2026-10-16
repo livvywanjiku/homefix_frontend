@@ -80,7 +80,7 @@ export default async function AdminBookingsPage(props: PageProps<"/admin/booking
 
         <FilterField label="Status">
           <AdminSelect name="status" defaultValue={one(params.status) ?? ""}>
-            <option value="">Any status</option>
+            <option key="any-status" value="">Any status</option>
             {BOOKING_STATUS_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -91,7 +91,7 @@ export default async function AdminBookingsPage(props: PageProps<"/admin/booking
 
         <FilterField label="Location">
           <AdminSelect name="location_id" defaultValue={one(params.location_id) ?? ""}>
-            <option value="">Any location</option>
+            <option key="any-location" value="">Any location</option>
             {locations.data.map((location) => (
               <option key={location.id} value={String(location.id)}>
                 {location.label}

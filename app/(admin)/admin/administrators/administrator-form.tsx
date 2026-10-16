@@ -71,15 +71,15 @@ export function AdministratorForm({
             <>
               {/* Submitted as nothing at all: a disabled control is not sent. */}
               <AdminSelect disabled defaultValue={administrator?.role ?? "superadmin"}>
-                <option value={administrator?.role ?? "superadmin"}>
+                <option key={administrator?.role ?? "superadmin"} value={administrator?.role ?? "superadmin"}>
                   {ADMIN_ROLE_LABEL[administrator?.role ?? "superadmin"] ?? "Administrator"}
                 </option>
               </AdminSelect>
             </>
           ) : (
             <AdminSelect name="role" defaultValue={administrator?.role ?? "admin"} required>
-              <option value="admin">Administrator</option>
-              <option value="superadmin">Super Administrator</option>
+              <option key="admin" value="admin">Administrator</option>
+              <option key="superadmin" value="superadmin">Super Administrator</option>
             </AdminSelect>
           )}
         </FormField>

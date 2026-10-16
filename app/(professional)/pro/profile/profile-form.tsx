@@ -121,7 +121,7 @@ export function ProfileForm({
           >
             {(props) => (
               <Select {...props} defaultValue={profile?.base_location?.id ?? ""}>
-                <option value="">Choose a town…</option>
+                <option key="choose-a-town" value="">Choose a town…</option>
                 {locations.map((location) => (
                   <option key={location.id} value={location.id}>
                     {location.label}

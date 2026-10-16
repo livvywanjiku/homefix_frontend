@@ -72,7 +72,7 @@ export function RequestForm({
         <Field name="service_id" label="Which service do you need?" errors={errors.service_id}>
           {(props) => (
             <Select {...props} defaultValue={serviceId} required>
-              <option value="" disabled>
+              <option key="choose-a-service" value="" disabled>
                 Choose a service
               </option>
               {services.map((service) => (
@@ -153,7 +153,7 @@ export function RequestForm({
           <Field name="preferred_time_slot" label="Preferred time" errors={errors.preferred_time_slot}>
             {(props) => (
               <Select {...props} defaultValue={request?.preferred_time_slot ?? ""}>
-                <option value="">Any time</option>
+                <option key="any-time" value="">Any time</option>
                 {TIME_SLOTS.map((slot) => (
                   <option key={slot.value} value={slot.value}>
                     {slot.label}
@@ -174,7 +174,7 @@ export function RequestForm({
         >
           {(props) => (
             <Select {...props} defaultValue={locationId} required>
-              <option value="" disabled>
+              <option key="choose-a-town" value="" disabled>
                 Choose a town
               </option>
               {locations.map((location) => (

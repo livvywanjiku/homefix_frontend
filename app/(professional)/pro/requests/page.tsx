@@ -8,7 +8,9 @@ import { Pagination } from "@/components/ui/pagination";
 import { requireRole } from "@/lib/dal";
 import { formatDate, formatMoney, formatRelative } from "@/lib/format";
 import { paginationLinks } from "@/lib/pagination";
+import { getMyProfile } from "@/lib/professional";
 import { getRequestBoard, type RequestBoardFilters } from "@/lib/request-board";
+import { ProfileSetupPrompt } from "../profile-setup-prompt";
 
 export const metadata: Metadata = { title: "Job board" };
 
@@ -40,6 +42,17 @@ function single(value: string | string[] | undefined): string | undefined {
  */
 export default async function RequestBoardPage(props: PageProps<"/pro/requests">) {
   const session = await requireRole("professional");
+  const profile = await getMyProfile(session.token);
+
+  /*
+   * The default scope is the professional's own services and areas, and both
+   * live on the profile — which the board endpoint needs to exist before it
+   * will answer at all.
+   */
+  if (profile === null) {
+    return <ProfileSetupPrompt />;
+  }
+
   const params = await props.searchParams;
 
   const scope = single(params.scope) === "all" ? "all" : "matching";
@@ -117,7 +130,7 @@ export default async function RequestBoardPage(props: PageProps<"/pro/requests">
               defaultValue={single(params.urgency) ?? ""}
               className="h-10 rounded-lg border border-line bg-card px-3 text-sm"
             >
-              <option value="">Any</option>
+              <option key="any" value="">Any</option>
               {URGENCIES.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}

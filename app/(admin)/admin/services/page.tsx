@@ -98,7 +98,7 @@ export default async function AdminServicesPage(props: PageProps<"/admin/service
 
         <FilterField label="Category">
           <AdminSelect name="category_id" defaultValue={one(params.category_id) ?? ""}>
-            <option value="">Any category</option>
+            <option key="any-category" value="">Any category</option>
             {categories.data.map((category) => (
               <option key={category.id} value={String(category.id)}>
                 {category.name}
