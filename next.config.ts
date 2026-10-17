@@ -39,6 +39,17 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+
+  experimental: {
+    serverActions: {
+      /*
+       * The job form sends up to 5 photos of 4 MB each (the API's ceiling), so
+       * the 1 MB default rejects a single ordinary phone photo. Allow the full
+       * 20 MB plus multipart overhead.
+       */
+      bodySizeLimit: "21mb",
+    },
+  },
 };
 
 export default nextConfig;

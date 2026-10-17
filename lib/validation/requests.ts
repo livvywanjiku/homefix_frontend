@@ -58,7 +58,12 @@ export const serviceRequestSchema = z
     urgency: z.enum(["flexible", "soon", "urgent"]),
 
     preferred_date: z.string().trim().optional(),
-    preferred_time_slot: z.enum(["morning", "afternoon", "evening"]).optional(),
+    // The select's "Any time" option submits an empty string, which is the
+    // absence of a preference rather than an invalid slot.
+    preferred_time_slot: z.preprocess(
+      blankToUndefined,
+      z.enum(["morning", "afternoon", "evening"]).optional(),
+    ),
 
     budget_min: shillings,
     budget_max: shillings,

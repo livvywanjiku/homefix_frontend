@@ -44,6 +44,25 @@ export async function getMyQuotations(
   return apiFetch<Paginated<Quotation>>("/professional/quotations", { token, search: filters });
 }
 
+/**
+ * This professional's own offer on one job, when they have made one.
+ *
+ * The board's job detail does not include it, so the page asks for it
+ * separately; the unique `(service_request_id, professional_id)` index means
+ * taking the first row is unambiguous.
+ */
+export async function getMyQuotationForRequest(
+  token: string,
+  serviceRequestId: number | string,
+): Promise<Quotation | null> {
+  const page = await getMyQuotations(token, {
+    service_request_id: serviceRequestId,
+    per_page: 1,
+  });
+
+  return page.data[0] ?? null;
+}
+
 export async function getMyQuotation(
   token: string,
   id: number | string,

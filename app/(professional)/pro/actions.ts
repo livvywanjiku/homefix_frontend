@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { ApiError, apiFetch, type HttpMethod } from "@/lib/api";
 import { requireRole } from "@/lib/dal";
 import type { FormState } from "@/lib/form-state";
+import type { Item, Quotation } from "@/lib/types";
 import { fieldErrors } from "@/lib/validation/errors";
 import {
   availabilityDaySchema,
@@ -14,6 +16,11 @@ import {
   profileSchema,
   type AvailabilityDayInput,
 } from "@/lib/validation/professional";
+import {
+  quotationItemSchema,
+  quotationSchema,
+  type QuotationItemInput,
+} from "@/lib/validation/quotations";
 
 /*
  * The professional workspace, as Server Actions.
@@ -49,14 +56,37 @@ function invalid(errors: Record<string, string[]>): FormState {
 }
 
 /**
- * Calls Laravel and reduces the outcome to "succeeded" or "here is the form
- * state to render".
+ * Reduces a failed call to a form state.
  *
  * A 422 becomes field errors, which is the case worth getting right — Laravel
  * is the authority on price ranges and duplicate services, and its bag already
  * speaks the shape the form reads. A 403 or 404 is surfaced as a form-level
  * message rather than being allowed to look like a crash: in this section those
  * mean the row was deleted in another tab, which is worth saying plainly.
+ */
+function failureFrom(error: unknown): FormState {
+  if (error instanceof ApiError) {
+    const errors = error.validationErrors();
+
+    return {
+      status: "error",
+      message:
+        Object.keys(errors).length > 0
+          ? "Check the highlighted fields and try again."
+          : messageFrom(error.body),
+      errors,
+    };
+  }
+
+  return {
+    status: "error",
+    message: "Cannot reach the HomeFix service right now. Please try again shortly.",
+  };
+}
+
+/**
+ * Calls Laravel and reduces the outcome to "succeeded" or "here is the form
+ * state to render".
  */
 async function send(
   token: string,
@@ -69,23 +99,7 @@ async function send(
 
     return null;
   } catch (error) {
-    if (error instanceof ApiError) {
-      const errors = error.validationErrors();
-
-      return {
-        status: "error",
-        message:
-          Object.keys(errors).length > 0
-            ? "Check the highlighted fields and try again."
-            : messageFrom(error.body),
-        errors,
-      };
-    }
-
-    return {
-      status: "error",
-      message: "Cannot reach the HomeFix service right now. Please try again shortly.",
-    };
+    return failureFrom(error);
   }
 }
 
@@ -467,4 +481,165 @@ export async function submitForVerificationAction(): Promise<FormState> {
     status: "success",
     message: "Your application is in the review queue. We will be in touch shortly.",
   };
+}
+
+/* ── Quotations ────────────────────────────────────────────────────────── */
+
+/**
+ * Reads the breakdown rows the quotation form submits.
+ *
+ * Rows are indexed (`category_0`, `category_1`, …) rather than sent as one JSON
+ * blob so a validation message can be attached to the exact input that caused
+ * it. The loop stops at the first missing index, which is safe because the form
+ * always renders its rows consecutively.
+ */
+function parseQuotationItems(formData: FormData): {
+  items: QuotationItemInput[];
+  errors: Record<string, string[]>;
+} {
+  const items: QuotationItemInput[] = [];
+  const errors: Record<string, string[]> = {};
+
+  for (let index = 0; formData.has(`category_${index}`); index += 1) {
+    const parsed = quotationItemSchema.safeParse({
+      category: required(formData, `category_${index}`),
+      description: required(formData, `description_${index}`),
+      quantity: formData.get(`quantity_${index}`),
+      unit_price: formData.get(`unit_price_${index}`),
+    });
+
+    if (parsed.success) {
+      items.push(parsed.data);
+      continue;
+    }
+
+    for (const [key, messages] of Object.entries(fieldErrors(parsed.error))) {
+      errors[`${key}_${index}`] = messages;
+    }
+  }
+
+  if (items.length === 0 && Object.keys(errors).length === 0) {
+    errors.items = ["Add at least one priced line"];
+  }
+
+  return { items, errors };
+}
+
+/**
+ * Maps Laravel's indexed breakdown errors (`items.0.unit_price_cents`) onto the
+ * flat names the form's inputs use (`unit_price_0`), so the message lands under
+ * the row that caused it rather than only in the banner.
+ */
+function quotationFailure(state: FormState): FormState {
+  if (!state.errors) return state;
+
+  const errors: Record<string, string[]> = {};
+
+  for (const [key, messages] of Object.entries(state.errors)) {
+    const match = /^items\.(\d+)\.(.+)$/.exec(key);
+
+    if (!match) {
+      (errors[key] ??= []).push(...messages);
+      continue;
+    }
+
+    const field = match[2] === "unit_price_cents" ? "unit_price" : match[2];
+    (errors[`${field}_${match[1]}`] ??= []).push(...messages);
+  }
+
+  return { ...state, errors };
+}
+
+/**
+ * Sends a quote, or revises the one already sent on this job.
+ *
+ * The line prices leave the form in whole shillings and are converted to cents
+ * once, by `quotationItemSchema`, on the way out. Laravel computes every line
+ * total and the grand total itself — none of those figures are submitted.
+ */
+export async function saveQuotationAction(
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const session = await requireRole("professional");
+
+  const id = text(formData, "id");
+  const serviceRequestId = Number(required(formData, "service_request_id"));
+
+  if (!Number.isInteger(serviceRequestId) || serviceRequestId <= 0) {
+    return invalid({ service_request_id: ["That job is no longer available"] });
+  }
+
+  const { items, errors } = parseQuotationItems(formData);
+
+  const parsed = quotationSchema.safeParse({
+    message: text(formData, "message"),
+    estimated_days: formData.get("estimated_days"),
+    available_from: text(formData, "available_from"),
+    valid_until: text(formData, "valid_until"),
+  });
+
+  if (!parsed.success) Object.assign(errors, fieldErrors(parsed.error));
+
+  if (!parsed.success || Object.keys(errors).length > 0) return invalid(errors);
+
+  const body = {
+    message: parsed.data.message || null,
+    estimated_days: parsed.data.estimated_days ?? null,
+    available_from: parsed.data.available_from || null,
+    valid_until: parsed.data.valid_until || null,
+    items: items.map((item) => ({
+      category: item.category,
+      description: item.description,
+      quantity: item.quantity,
+      // `quotationItemSchema` has already converted shillings to minor units.
+      unit_price_cents: item.unit_price,
+    })),
+  };
+
+  if (id) {
+    const failure = await send(session.token, "PUT", `/professional/quotations/${id}`, body);
+
+    if (failure) return quotationFailure(failure);
+
+    refresh(`/pro/quotations/${id}`, "/pro/quotations", `/pro/requests/${serviceRequestId}`);
+
+    return { status: "success", message: "Your quote has been updated." };
+  }
+
+  let created: Quotation;
+
+  try {
+    const response = await apiFetch<Item<Quotation>>("/professional/quotations", {
+      method: "POST",
+      token: session.token,
+      body: { ...body, service_request_id: serviceRequestId },
+    });
+
+    created = response.data;
+  } catch (error) {
+    return quotationFailure(failureFrom(error));
+  }
+
+  refresh("/pro/quotations", `/pro/requests/${serviceRequestId}`);
+
+  redirect(`/pro/quotations/${created.id}?sent=1`);
+}
+
+/**
+ * Pulls a quote before the customer decides.
+ *
+ * Takes FormData rather than `(previous, formData)`: the row changes state and
+ * the page re-renders, so there is no form state worth returning to a form that
+ * is about to disappear.
+ */
+export async function withdrawQuotationAction(formData: FormData): Promise<void> {
+  const session = await requireRole("professional");
+  const id = text(formData, "id");
+
+  if (!id) return;
+
+  await send(session.token, "POST", `/professional/quotations/${id}/withdraw`);
+
+  refresh("/pro/quotations", `/pro/quotations/${id}`);
 }

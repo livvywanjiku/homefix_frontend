@@ -426,6 +426,12 @@ export type Quotation = {
 
   professional?: QuotationProfessional;
 
+  /**
+   * The counterparty's number, present only once this quote has been accepted
+   * and only for the two parties. Null while the job is still being priced.
+   */
+  contact: { name: string; phone: string } | null;
+
   /** The job this price is for; present on the professional's own list. */
   service_request?: {
     id: number;

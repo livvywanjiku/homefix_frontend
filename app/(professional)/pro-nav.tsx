@@ -13,6 +13,7 @@ import { usePathname } from "next/navigation";
 const LINKS = [
   { href: "/pro", label: "Overview" },
   { href: "/pro/requests", label: "Job board" },
+  { href: "/pro/quotations", label: "My quotes" },
   { href: "/pro/profile", label: "Profile" },
   { href: "/pro/services", label: "Services" },
   { href: "/pro/availability", label: "Availability" },

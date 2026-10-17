@@ -1,13 +1,17 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { Badge } from "@/components/ui/badge";
+import { Badge, StatusBadge } from "@/components/ui/badge";
+import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ApiError } from "@/lib/api";
 import { requireRole } from "@/lib/dal";
 import { formatDate, formatDateTime, formatMoney } from "@/lib/format";
+import { getMyProfile } from "@/lib/professional";
+import { getMyQuotationForRequest } from "@/lib/quotations";
 import { getBoardRequest } from "@/lib/request-board";
-import type { ServiceRequest } from "@/lib/types";
+import type { Quotation, ServiceRequest } from "@/lib/types";
+import { QuotationForm } from "../../quotations/quotation-form";
 
 type Props = PageProps<"/pro/requests/[id]">;
 
@@ -26,9 +30,15 @@ export default async function BoardRequestPage({ params }: Props) {
   const { id } = await params;
 
   let request: ServiceRequest;
+  let profile: Awaited<ReturnType<typeof getMyProfile>>;
+  let existing: Quotation | null;
 
   try {
-    request = await getBoardRequest(session.token, id);
+    [request, profile, existing] = await Promise.all([
+      getBoardRequest(session.token, id),
+      getMyProfile(session.token),
+      getMyQuotationForRequest(session.token, id),
+    ]);
   } catch (error) {
     /*
      * A job that has been awarded, cancelled or has lapsed answers 403, and one
@@ -98,6 +108,74 @@ export default async function BoardRequestPage({ params }: Props) {
               </ul>
             </Card>
           ) : null}
+
+          <Card className="p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="font-semibold tracking-tight">
+                {existing ? "Your quote" : "Send a quote"}
+              </h2>
+              {existing ? <StatusBadge status={existing.status} /> : null}
+            </div>
+
+            {existing ? (
+              <div className="mt-3 flex flex-col gap-4">
+                <p className="text-sm text-muted-foreground">
+                  {existing.status === "pending"
+                    ? "Waiting for the customer to decide. You can revise the price until they do."
+                    : existing.status === "accepted"
+                      ? "Your quote was accepted. The customer can see your contact details now."
+                      : existing.status === "rejected"
+                        ? "The customer chose another quote on this job."
+                        : existing.status === "withdrawn"
+                          ? "You withdrew this quote, so the customer can no longer choose it."
+                          : "This quote has expired."}
+                </p>
+
+                <dl className="flex flex-wrap gap-x-8 gap-y-3 text-sm">
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Your price</dt>
+                    <dd className="font-semibold">{formatMoney(existing.total_cents)}</dd>
+                  </div>
+                  {existing.valid_until ? (
+                    <div>
+                      <dt className="text-xs text-muted-foreground">Valid until</dt>
+                      <dd className="font-medium">{formatDate(existing.valid_until)}</dd>
+                    </div>
+                  ) : null}
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Reference</dt>
+                    <dd className="font-medium">{existing.reference}</dd>
+                  </div>
+                </dl>
+
+                <div>
+                  <ButtonLink href={`/pro/quotations/${existing.id}`} variant="secondary">
+                    {existing.can_be_edited ? "View or revise" : "View quote"}
+                  </ButtonLink>
+                </div>
+              </div>
+            ) : !request.accepts_quotations ? (
+              <p className="mt-3 text-sm text-muted-foreground">
+                This job is no longer accepting quotes.
+              </p>
+            ) : !profile?.is_verified ? (
+              <div className="mt-3 flex flex-col gap-3">
+                <p className="text-sm text-muted-foreground">
+                  Only verified professionals can price work. Finish your verification to quote
+                  on jobs like this one.
+                </p>
+                <div>
+                  <ButtonLink href="/pro/verification" variant="secondary">
+                    Go to verification
+                  </ButtonLink>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-4">
+                <QuotationForm serviceRequestId={request.id} />
+              </div>
+            )}
+          </Card>
         </div>
 
         <aside className="flex flex-col gap-6 lg:sticky lg:top-24">

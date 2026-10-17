@@ -61,6 +61,22 @@ function messageFrom(body: unknown): string {
 }
 
 /**
+ * Laravel keys array failures by index ("images.0"), while the form has one
+ * control per field. Fold those back onto the field so the message appears
+ * under it instead of only in the summary banner.
+ */
+function normalize(errors: Record<string, string[]>): Record<string, string[]> {
+  const normalized: Record<string, string[]> = {};
+
+  for (const [key, messages] of Object.entries(errors)) {
+    const field = key.split(".")[0];
+    (normalized[field] ??= []).push(...messages);
+  }
+
+  return normalized;
+}
+
+/**
  * Reduces a failed call to a form state.
  *
  * A 422 becomes field errors — Laravel is the authority on whether a service is
@@ -70,7 +86,7 @@ function messageFrom(body: unknown): string {
  */
 function failureFrom(error: unknown): FormState {
   if (error instanceof ApiError) {
-    const errors = error.validationErrors();
+    const errors = normalize(error.validationErrors());
 
     return {
       status: "error",
@@ -323,4 +339,82 @@ export async function deleteRequestImageAction(formData: FormData): Promise<void
   await send(session.token, "DELETE", `/service-requests/${request}/images/${image}`);
 
   revalidatePath(`/dashboard/requests/${request}`);
+}
+
+/* ── Quotations ────────────────────────────────────────────────────────── */
+
+/**
+ * Awards the job to one quote.
+ *
+ * Accepting settles every other live offer on the job in the same transaction
+ * and creates the booking, so the "are you sure?" lives in the UI rather than
+ * here. On success the page is re-rendered from Laravel: the request is no
+ * longer open, the losing quotes read "rejected", and the winner carries its
+ * booking — none of which this action could invent locally.
+ *
+ * Failures come back as form state rather than being swallowed: a quote that
+ * was withdrawn or expired while the customer was reading the page answers
+ * 422, and the wording in that response is the useful part.
+ */
+export async function acceptQuotationAction(
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const session = await requireRole("customer");
+  const request = required(formData, "request_id");
+  const quotation = required(formData, "quotation_id");
+
+  if (!request || !quotation) {
+    return { status: "error", message: "That quote is no longer available." };
+  }
+
+  const failure = await send(
+    session.token,
+    "POST",
+    `/service-requests/${request}/quotations/${quotation}/accept`,
+  );
+
+  revalidatePath(`/dashboard/requests/${request}`);
+  refresh();
+
+  if (failure) return failure;
+
+  // `redirect` throws to unwind the render, so it comes last.
+  redirect(`/dashboard/requests/${request}?awarded=1`);
+}
+
+/**
+ * Declines one quote and leaves the job open to the others.
+ *
+ * Deliberately not a step towards awarding: the customer can turn three of
+ * four offers down and still be deciding. Only the accepting action closes the
+ * job.
+ */
+export async function rejectQuotationAction(
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const session = await requireRole("customer");
+  const request = required(formData, "request_id");
+  const quotation = required(formData, "quotation_id");
+
+  if (!request || !quotation) {
+    return { status: "error", message: "That quote is no longer available." };
+  }
+
+  const failure = await send(
+    session.token,
+    "POST",
+    `/service-requests/${request}/quotations/${quotation}/reject`,
+  );
+
+  revalidatePath(`/dashboard/requests/${request}`);
+  refresh();
+
+  if (failure) return failure;
+
+  return {
+    status: "success",
+    message: "That quote has been declined. The job stays open to the others.",
+  };
 }

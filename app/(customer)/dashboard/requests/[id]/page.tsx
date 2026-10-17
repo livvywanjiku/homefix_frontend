@@ -9,8 +9,10 @@ import { ApiError } from "@/lib/api";
 import { requireRole } from "@/lib/dal";
 import { formatDate, formatDateTime, formatMoney } from "@/lib/format";
 import { getServiceRequest } from "@/lib/requests";
+import { getQuotationsForRequest } from "@/lib/quotations";
 import type { ServiceRequest } from "@/lib/types";
 import { AddPhotosForm, CancelRequestForm, DeleteImageButton } from "../request-actions";
+import { QuotationComparison } from "../quotation-comparison";
 
 type Props = PageProps<"/dashboard/requests/[id]">;
 
@@ -50,6 +52,15 @@ export default async function RequestDetailPage({ params, searchParams }: Props)
     throw error;
   }
 
+  /*
+   * The offers on the job. Fetched after the request so an inaccessible job
+   * still collapses to "no such page" rather than surfacing a quotation error;
+   * by here the customer is known to own it.
+   */
+  const quotations = await getQuotationsForRequest(session.token, id);
+  const awarded = quotations.data.find((quotation) => quotation.status === "accepted");
+  const awardedName = awarded?.professional?.business_name ?? awarded?.professional?.name;
+
   return (
     <div className="flex flex-col gap-6">
       <nav aria-label="Breadcrumb" className="text-sm text-muted-foreground">
@@ -61,6 +72,13 @@ export default async function RequestDetailPage({ params, searchParams }: Props)
         </span>
         <span className="text-foreground">{request.reference}</span>
       </nav>
+
+      {single(query.awarded) ? (
+        <FormMessage tone="success">
+          Job awarded. The professional has your contact details; their number is now shown on
+          the awarded quote below. Every other quote on this job was declined.
+        </FormMessage>
+      ) : null}
 
       {single(query.posted) ? (
         <FormMessage tone="success">
@@ -140,6 +158,25 @@ export default async function RequestDetailPage({ params, searchParams }: Props)
             </Card>
           ) : null}
 
+          <section id="quotes" className="scroll-mt-24">
+            <Card className="p-5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="font-semibold tracking-tight">
+                  Quotes{quotations.data.length > 0 ? ` (${quotations.data.length})` : ""}
+                </h2>
+                {awarded ? <Badge tone="success">Awarded</Badge> : null}
+              </div>
+
+              <p className="mt-1 mb-4 text-sm text-muted-foreground">
+                {awarded
+                  ? `You awarded this job${awardedName ? ` to ${awardedName}` : ""}. The other quotes were declined.`
+                  : "Compare the offers on price, timing and track record. Accepting one awards the job and declines the rest."}
+              </p>
+
+              <QuotationComparison requestId={request.id} quotations={quotations.data} />
+            </Card>
+          </section>
+
           <Card className="p-5">
             <h2 className="font-semibold tracking-tight">Where</h2>
 
@@ -188,12 +225,6 @@ export default async function RequestDetailPage({ params, searchParams }: Props)
           <Card className="p-5">
             <h2 className="font-semibold tracking-tight">Quotes</h2>
 
-            {/*
-              Quotations land in the next slice. Until then this reports the
-              count the API actually holds rather than inventing a list — a job
-              that has been quoted says so, and the customer is not shown a
-              fabricated comparison table.
-            */}
             <p className="mt-3 text-sm text-muted-foreground">
               {request.quotes_count === 0
                 ? `No quotes yet. Professionals covering ${
@@ -203,6 +234,14 @@ export default async function RequestDetailPage({ params, searchParams }: Props)
                     request.quotes_count === 1 ? " has" : "s have"
                   } quoted on this job.`}
             </p>
+
+            {quotations.data.length > 0 ? (
+              <div className="mt-3">
+                <a href="#quotes" className="text-sm font-medium text-brand hover:underline">
+                  {awarded ? "See the awarded quote" : "Compare the quotes"}
+                </a>
+              </div>
+            ) : null}
           </Card>
 
           {request.is_cancellable ? (
